@@ -1,0 +1,298 @@
+/* ================================================================
+   ESIC PORTAL CLONE — Global Styles
+   Replicated from portal.esic.gov.in login page
+   ================================================================ */
+
+/* --- Reset -------------------------------------------------------- */
+*, *::before, *::after { box-sizing: border-box; }
+
+html, body {
+  margin: 0;
+  padding: 0;
+  font-family: 'Poppins', 'Segoe UI', Arial, sans-serif;
+  background-color: #ffffff;
+  color: #333;
+}
+
+a { color: #007bff; text-decoration: none; }
+a:hover { text-decoration: underline; color: #0056b3; }
+
+/* --- Utility classes (util.css) ----------------------------------- */
+.p-t-1  { padding-top: 1px; }
+.p-t-8  { padding-top: 8px; }
+.p-t-25 { padding-top: 25px; }
+.p-b-1  { padding-bottom: 1px; }
+.p-b-15 { padding-bottom: 15px; }
+.p-b-25 { padding-bottom: 25px; }
+.p-l-55 { padding-left: 55px; }
+.p-r-55 { padding-right: 55px; }
+.m-b-1  { margin-bottom: 1px !important; }
+.text-right { text-align: right; }
+.text-left  { text-align: left; }
+
+/* --- Header ------------------------------------------------------- */
+#header {
+  padding: 5px 15px;
+  border-bottom: 1px solid #e8e8e8;
+  background-color: #ffffff !important;
+}
+
+.esic-logo  { margin-top: 9px; height: 80px; width: auto; }
+.govt-logo  { height: 75px; width: auto; float: right; }
+
+/* --- Notice / announcement bar ------------------------------------ */
+.loginpageadd { background-color: #ffffff; }
+
+.hedaparaddada {
+  background-color: #ffffff;
+  padding: 5px 0 15px 0;
+  border-bottom: 1px solid #f0f0f0;
+}
+.hedaparaddada p { margin-bottom: 0; }
+
+/* --- Limiter & outer container ------------------------------------ */
+.limiter { width: 100%; margin: 0 auto; }
+
+.container-login100 {
+  width: 100%;
+  min-height: 500px;
+  display: -webkit-box;
+  display: -webkit-flex;
+  display: -moz-box;
+  display: -ms-flexbox;
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  align-items: center;
+  padding: 15px;
+  background-color: #ffffff;
+}
+
+/* --- Login card --------------------------------------------------- */
+.wrap-login100 {
+  width: 390px;
+  background: #ffffff;
+  border-radius: 10px;
+  overflow: hidden;
+  position: relative;
+  -webkit-box-shadow: 0 5px 10px 0 rgba(0, 0, 0, 0.1);
+  -moz-box-shadow:    0 5px 10px 0 rgba(0, 0, 0, 0.1);
+  box-shadow:         0 5px 10px 0 rgba(0, 0, 0, 0.1);
+}
+
+/* --- Form title --------------------------------------------------- */
+.login100-form-title {
+  font-family: 'Poppins', sans-serif;
+  font-weight: 700;
+  font-size: 30px;
+  color: #333333;
+  line-height: 1.2;
+  text-align: center;
+  width: 100%;
+  display: block;
+}
+
+/* --- Input wrappers ----------------------------------------------- */
+.wrap-input100 {
+  width: 100%;
+  position: relative;
+  border-bottom: 2px solid #d9d9d9;
+  padding-bottom: 13px;
+  margin-bottom: 27px;
+}
+
+.label-input100 {
+  font-family: 'Poppins', sans-serif;
+  font-size: 11px;
+  color: #999999;
+  line-height: 1.5;
+  padding-left: 2px;
+  display: block;
+}
+
+.input100 {
+  font-family: 'Poppins', sans-serif;
+  font-size: 18px;
+  color: #555555;
+  line-height: 1.2;
+  display: block;
+  width: 100%;
+  background: transparent;
+  padding: 0 5px 0 28px;
+  border: none;
+  outline: none;
+}
+.input100:focus { outline: none; border: none; }
+
+/* Animated underline on focus */
+.focus-input100 {
+  position: absolute;
+  display: block;
+  width: 100%;
+  height: 100%;
+  top: 0;
+  left: 0;
+  pointer-events: none;
+}
+
+.focus-input100::before {
+  content: "";
+  display: block;
+  position: absolute;
+  bottom: -2px;
+  left: 0;
+  width: 0;
+  height: 2px;
+  -webkit-transition: all 0.4s;
+  -o-transition:      all 0.4s;
+  transition:         all 0.4s;
+  background: #a52a2a;
+}
+
+.focus-input100::after {
+  font-size: 22px;
+  color: #999999;
+  content: attr(data-symbol);
+  display: block;
+  width: 22px;
+  height: 22px;
+  position: absolute;
+  left: 0;
+  top: 50%;
+  -webkit-transform: translateY(-50%);
+  transform:         translateY(-50%);
+}
+
+.input100:focus + .focus-input100::before { width: 100%; }
+.input100:focus + .focus-input100::after  { color: #a52a2a; }
+
+/* Captcha image row */
+#rightcaptch             { display: inline-block; vertical-align: middle; }
+#rightcaptch img         { vertical-align: middle; }
+
+/* --- Login button ------------------------------------------------- */
+.container-login100-form-btn {
+  width: 100%;
+  display: -webkit-box;
+  display: -webkit-flex;
+  display: -moz-box;
+  display: -ms-flexbox;
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  padding-top: 13px;
+}
+
+.wrap-login100-form-btn {
+  width: 100%;
+  display: block;
+  position: relative;
+  z-index: 1;
+  border-radius: 25px;
+  overflow: hidden;
+}
+
+.login100-form-bgbtn {
+  position: absolute;
+  z-index: -1;
+  width: 300%;
+  height: 100%;
+  background: -webkit-linear-gradient(left, #a52a2a, #8b0000, #a52a2a);
+  background: -o-linear-gradient(left,      #a52a2a, #8b0000, #a52a2a);
+  background: linear-gradient(to right,     #a52a2a, #8b0000, #a52a2a);
+  top: 0;
+  left: -100%;
+  -webkit-transition: all 0.4s;
+  -o-transition:      all 0.4s;
+  transition:         all 0.4s;
+}
+
+.login100-form-btn-gou {
+  font-family: 'Poppins', sans-serif;
+  font-weight: 500;
+  font-size: 16px;
+  color: #ffffff !important;
+  background-color: #a52a2a;
+  line-height: 1.2;
+  text-transform: uppercase;
+  display: -webkit-box;
+  display: -webkit-flex;
+  display: -moz-box;
+  display: -ms-flexbox;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 0 20px;
+  width: 100%;
+  height: 50px;
+  border: none;
+  cursor: pointer;
+  -webkit-transition: background-color 0.4s;
+  transition:         background-color 0.4s;
+}
+
+.login100-form-btn-gou:hover           { background-color: #8b0000; }
+.wrap-login100-form-btn:hover .login100-form-bgbtn { left: 0; }
+.login100-form-btn-gou:disabled        { opacity: 0.7; cursor: not-allowed; }
+
+/* --- Hindi link (back-to-top) ------------------------------------- */
+.back-to-top {
+  position: fixed;
+  right: 30px;
+  top: 120px;
+  z-index: 999;
+  display: -webkit-inline-box;
+  display: inline-flex;
+  align-items: center;
+  padding: 8px 15px;
+  border-radius: 5px;
+  background-color: #a52a2a;
+  color: #ffffff !important;
+  font-size: 14px;
+  text-decoration: none;
+  -webkit-transition: background-color 0.3s;
+  transition:         background-color 0.3s;
+}
+.back-to-top:hover { background-color: #8b0000; color: #ffffff !important; text-decoration: none; }
+
+/* --- Modal -------------------------------------------------------- */
+.modalBackground {
+  background-color: black;
+  filter: alpha(opacity=80);
+  opacity: 0.8;
+}
+.modalPopup {
+  background-color: #ffffdd;
+  border: 3px solid gray;
+  padding: 5px;
+  width: 350px;
+  height: 300px;
+}
+
+/* --- Footer ------------------------------------------------------- */
+footer { margin-top: 20px; }
+
+.footer-area-bottom {
+  background-color: #333333;
+  padding: 15px 0;
+  color: #cccccc;
+}
+.footer-area-bottom a       { color: #aaaaaa; }
+.footer-area-bottom a:hover { color: #ffffff; }
+.copyright  { color: #cccccc; font-size: 13px; }
+.copyright1 { color: #cccccc; font-size: 13px; }
+.copyright4 { color: #cccccc; font-size: 13px; }
+
+/* --- Responsive --------------------------------------------------- */
+@media (max-width: 768px) {
+  .wrap-login100 { width: 100%; max-width: 390px; }
+  .p-l-55 { padding-left: 25px; }
+  .p-r-55 { padding-right: 25px; }
+  .hedaparaddada .col-md-12 { margin-left: 10px !important; }
+  .back-to-top { right: 10px; top: auto; bottom: 30px; }
+}
+
+@media (max-width: 576px) {
+  .login100-form-title { font-size: 24px; }
+  .input100 { font-size: 15px; }
+}
