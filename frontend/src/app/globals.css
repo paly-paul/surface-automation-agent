@@ -734,15 +734,113 @@ footer { margin-top: 20px; }
   margin-top: 6px;
 }
 
-/* ── Step 6 success screen ── */
-.reg-success-big {
-  padding: 20px 10px;
-  text-align: center;
+/* ── Wide variant for step 6 document upload ── */
+.reg-modal-box--wide {
+  width: 680px;
+  max-width: 98vw;
 }
-.reg-success-big h5 { font-size: 16px; margin: 0; }
+
+/* ── Step 6 : Employee Registration table form ── */
+.reg-er-section-header {
+  background-color: #e8e8e8;
+  border: 1px solid #cccccc;
+  font-family: Arial, Verdana, sans-serif;
+  font-size: 13px;
+  font-weight: bold;
+  color: #333;
+  padding: 5px 10px;
+  margin-bottom: 0;
+}
+
+.reg-er-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-family: Arial, Verdana, sans-serif;
+  font-size: 12px;
+  margin-bottom: 10px;
+}
+
+.reg-er-table tr {
+  border: 1px solid #d0d0a0;
+}
+
+.reg-er-label-cell {
+  background-color: #fffde7;
+  color: #742902;
+  font-weight: bold;
+  padding: 8px 10px;
+  width: 42%;
+  vertical-align: middle;
+  border: 1px solid #d0d0a0;
+}
+
+.reg-er-field-cell {
+  background-color: #ffffff;
+  padding: 8px 10px;
+  vertical-align: middle;
+  border: 1px solid #d0d0a0;
+}
+
+/* ── File upload row ── */
+.reg-er-file-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+
+.reg-er-choose-btn {
+  background-color: #e8e8d8;
+  color: #333;
+  border: 1px solid #b0a080;
+  border-radius: 3px;
+  padding: 4px 10px;
+  font-size: 12px;
+  font-family: Arial, Verdana, sans-serif;
+  cursor: pointer;
+  white-space: nowrap;
+}
+.reg-er-choose-btn:hover { background-color: #d8d8c0; }
+
+.reg-er-filename {
+  font-size: 12px;
+  color: #555;
+  min-width: 100px;
+  max-width: 200px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.reg-er-upload-btn {
+  background-color: #e8e8d8;
+  color: #333;
+  border: 1px solid #b0a080;
+  border-radius: 3px;
+  padding: 4px 12px;
+  font-size: 12px;
+  font-family: Arial, Verdana, sans-serif;
+  cursor: pointer;
+  font-weight: bold;
+  white-space: nowrap;
+}
+.reg-er-upload-btn:hover:not(:disabled) { background-color: #c8c8a0; }
+.reg-er-upload-btn:disabled { opacity: 0.55; cursor: not-allowed; }
+
+/* ── Notes section ── */
+.reg-er-notes {
+  color: #c00000;
+  font-size: 12px;
+  font-family: Arial, Verdana, sans-serif;
+  padding: 8px 10px;
+  line-height: 1.7;
+}
 
 @media (max-width: 576px) {
   .reg-modal-box { width: 100%; border-radius: 0; }
+  .reg-modal-box--wide { width: 100%; }
   .reg-btn-row   { flex-direction: column-reverse; }
   .reg-btn-primary, .reg-btn-secondary { width: 100%; text-align: center; }
+  .reg-er-label-cell { width: 40%; }
+  .reg-er-filename { max-width: 100px; }
 }

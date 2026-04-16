@@ -165,8 +165,11 @@ export default function DashboardPage() {
   const [aadhaarNo,      setAadhaarNo]      = useState('');
   const [otherDocType,   setOtherDocType]   = useState('');
   const [otherDocNo,     setOtherDocNo]     = useState('');
+  const [docFile,        setDocFile]        = useState<File | null>(null);
+  const [docUploaded,    setDocUploaded]    = useState(false);
+  const [docUploadError, setDocUploadError] = useState('');
   const [regError,       setRegError]       = useState('');
-  const [regSuccess,     setRegSuccess]     = useState('');
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const activityRef = useRef(0);
 
@@ -249,8 +252,10 @@ export default function DashboardPage() {
     setAadhaarNo('');
     setOtherDocType('');
     setOtherDocNo('');
+    setDocFile(null);
+    setDocUploaded(false);
+    setDocUploadError('');
     setRegError('');
-    setRegSuccess('');
     setShowRegister(true);
   };
 
@@ -312,17 +317,72 @@ export default function DashboardPage() {
     setRegStep(5);
   };
 
-  const handleSubmitRegistration = async () => {
+  // Step 5 Continue: Aadhaar → submit; Other Documents → go to step 6 (file upload form)
+  const handleStep5Continue = () => {
     setRegError('');
     if (!idType) { setRegError('Please select an ID type.'); return; }
-    if (idType === 'aadhaar' && !/^\d{12}$/.test(aadhaarNo)) {
-      setRegError('Please enter a valid 12-digit Aadhaar number.');
+    if (idType === 'aadhaar') {
+      if (!/^\d{12}$/.test(aadhaarNo)) {
+        setRegError('Please enter a valid 12-digit Aadhaar number.');
+        return;
+      }
+      // Aadhaar path: submit directly and close
+      fetch('/api/employee/register', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          esic_answer: esicAnswer,
+          insurance_no: insuranceNo || null,
+          date_of_appointment: dateOfAppt || null,
+          mobile: mobileNo,
+          id_type: 'aadhaar',
+          aadhaar_no: aadhaarNo,
+          other_doc_type: null,
+          other_doc_no: null,
+        }),
+      }).catch(() => {/* stub */});
+      closeRegisterModal();
       return;
     }
-    if (idType === 'other' && (!otherDocType || !otherDocNo.trim())) {
-      setRegError('Please select document type and enter document number.');
+    // Other Documents → go to upload form
+    setDocFile(null);
+    setDocUploaded(false);
+    setDocUploadError('');
+    setRegStep(6);
+  };
+
+  // File selection handler
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0] ?? null;
+    setDocFile(file);
+    setDocUploaded(false);
+    setDocUploadError('');
+  };
+
+  // Upload button: validate type and size (50 KB – 100 KB)
+  const handleFileUpload = () => {
+    setDocUploadError('');
+    if (!docFile) { setDocUploadError('Please choose a file first.'); return; }
+    const allowed = ['application/pdf', 'image/jpeg', 'image/jpg'];
+    const ext = docFile.name.split('.').pop()?.toLowerCase() ?? '';
+    if (!allowed.includes(docFile.type) && !['pdf','jpg','jpeg'].includes(ext)) {
+      setDocUploadError('Only PDF, JPG and JPEG files are allowed.');
       return;
     }
+    const kb = docFile.size / 1024;
+    if (kb < 50 || kb > 100) {
+      setDocUploadError(`File size must be between 50 KB and 100 KB. Current size: ${kb.toFixed(1)} KB.`);
+      return;
+    }
+    setDocUploaded(true);
+  };
+
+  // Step 6 Continue: validate and submit
+  const handleStep6Submit = async () => {
+    setRegError('');
+    if (!otherDocType) { setRegError('Please select a document type.'); return; }
+    if (!otherDocNo.trim()) { setRegError('Please enter the document number.'); return; }
+    if (!docUploaded) { setRegError('Please upload the ID document before continuing.'); return; }
     try {
       await fetch('/api/employee/register', {
         method: 'POST',
@@ -332,15 +392,14 @@ export default function DashboardPage() {
           insurance_no: insuranceNo || null,
           date_of_appointment: dateOfAppt || null,
           mobile: mobileNo,
-          id_type: idType,
-          aadhaar_no: idType === 'aadhaar' ? aadhaarNo : null,
-          other_doc_type: idType === 'other' ? otherDocType : null,
-          other_doc_no: idType === 'other' ? otherDocNo : null,
+          id_type: 'other',
+          aadhaar_no: null,
+          other_doc_type: otherDocType,
+          other_doc_no: otherDocNo,
         }),
       });
-    } catch { /* stub – proceed regardless */ }
-    setRegSuccess('Employee registration submitted successfully!');
-    setRegStep(6);
+    } catch { /* stub */ }
+    closeRegisterModal();
   };
 
   const displayName = employerCode
@@ -573,7 +632,7 @@ export default function DashboardPage() {
       {/* ══ REGISTER / ENROLL NEW EMPLOYEE MODAL ══════════════════════════════ */}
       {showRegister && (
         <ModalBackdrop>
-          <div className="reg-modal-box">
+          <div className={`reg-modal-box${regStep === 6 ? ' reg-modal-box--wide' : ''}`}>
 
             {/* Header */}
             <div className="reg-modal-header">
@@ -583,8 +642,8 @@ export default function DashboardPage() {
 
             <div className="reg-modal-body">
 
-              {/* ── Step indicator ── */}
-              {regStep < 6 && (
+              {/* ── Step indicator (steps 1–5 only; step 6 has its own full-form header) ── */}
+              {regStep <= 5 && (
                 <div className="reg-step-indicator">
                   {[1,2,3,4,5].map(s => (
                     <span key={s} className={`reg-step-dot${regStep === s ? ' active' : regStep > s ? ' done' : ''}`}>
@@ -740,25 +799,27 @@ export default function DashboardPage() {
                 </div>
               )}
 
-              {/* ─────────── STEP 5 : ID verification ─────────── */}
+              {/* ─────────── STEP 5 : Select ID type for identification ─────────── */}
               {regStep === 5 && (
                 <div className="reg-step-content">
                   <p className="reg-note">
-                    Please provide a valid identity document for the employee.
+                    Please select the type of identity document you will provide for the employee.
+                    If you select <strong>Other Documents</strong>, you will be asked to upload a
+                    scanned copy on the next screen.
                   </p>
                   <div className="reg-form-group">
-                    <label className="reg-label">Select ID Type <span className="reg-req">*</span></label>
+                    <label className="reg-label">Select ID Type for Identification <span className="reg-req">*</span></label>
                     <div className="reg-radio-group">
                       <label className="reg-radio-label">
                         <input type="radio" name="id_type" value="aadhaar"
                                checked={idType === 'aadhaar'}
-                               onChange={() => { setIdType('aadhaar'); setRegError(''); }} />
-                        &nbsp;Aadhaar Card
+                               onChange={() => { setIdType('aadhaar'); setAadhaarNo(''); setRegError(''); }} />
+                        &nbsp;Aadhaar
                       </label>
                       <label className="reg-radio-label">
                         <input type="radio" name="id_type" value="other"
                                checked={idType === 'other'}
-                               onChange={() => { setIdType('other'); setRegError(''); }} />
+                               onChange={() => { setIdType('other'); setAadhaarNo(''); setRegError(''); }} />
                         &nbsp;Other Documents
                       </label>
                     </div>
@@ -774,56 +835,138 @@ export default function DashboardPage() {
                     </div>
                   )}
 
-                  {idType === 'other' && (
-                    <>
-                      <div className="reg-form-group">
-                        <label className="reg-label">Document Type <span className="reg-req">*</span></label>
-                        <select className="reg-input"
-                                value={otherDocType}
-                                onChange={e => { setOtherDocType(e.target.value); setRegError(''); }}>
-                          <option value="">-- Select Document Type --</option>
-                          <option value="passport">Passport</option>
-                          <option value="voter_id">Voter ID Card</option>
-                          <option value="driving_licence">Driving Licence</option>
-                          <option value="pan">PAN Card</option>
-                          <option value="ration_card">Ration Card</option>
-                          <option value="bank_passbook">Bank Passbook</option>
-                        </select>
-                      </div>
-                      <div className="reg-form-group">
-                        <label className="reg-label">Document Number <span className="reg-req">*</span></label>
-                        <input className="reg-input" type="text"
-                               placeholder="Enter document number"
-                               value={otherDocNo}
-                               onChange={e => { setOtherDocNo(e.target.value); setRegError(''); }} />
-                      </div>
-                    </>
-                  )}
-
                   {regError && <div className="reg-error">{regError}</div>}
                   <div className="reg-btn-row">
                     <button className="reg-btn-secondary" onClick={() => { setRegStep(4); setRegError(''); }}>Back</button>
-                    <button className="reg-btn-primary" onClick={handleSubmitRegistration}>Submit</button>
+                    <button className="reg-btn-primary" onClick={handleStep5Continue}>
+                      {idType === 'other' ? 'Continue' : 'Submit'}
+                    </button>
                   </div>
                 </div>
               )}
 
-              {/* ─────────── STEP 6 : Success ─────────── */}
+              {/* ─────────── STEP 6 : Employee Registration – document upload form ─────────── */}
               {regStep === 6 && (
-                <div className="reg-step-content" style={{ textAlign: 'center' }}>
-                  <div className="reg-success-big">
-                    <div style={{ fontSize: '48px', color: '#28a745' }}>✓</div>
-                    <h5 style={{ color: '#28a745', marginTop: '10px' }}>Registration Submitted</h5>
-                    <p style={{ fontSize: '13px', color: '#555', marginTop: '8px' }}>
-                      {regSuccess}
-                    </p>
-                    <p style={{ fontSize: '12px', color: '#777' }}>
-                      The employee&apos;s details have been submitted for processing.
-                      The Insurance Number will be generated and communicated to the registered mobile number.
-                    </p>
+                <div className="reg-step-content">
+                  {/* Section header bar */}
+                  <div className="reg-er-section-header">Employee Registration</div>
+
+                  <table className="reg-er-table">
+                    <tbody>
+                      {/* Employer code */}
+                      <tr>
+                        <td className="reg-er-label-cell">Employer/Subunit Code No.:<span className="reg-req">*</span></td>
+                        <td className="reg-er-field-cell">
+                          <input className="reg-input" type="text"
+                                 value={employerCode} readOnly
+                                 style={{ backgroundColor: '#f5f5f5', width: '220px' }} />
+                        </td>
+                      </tr>
+
+                      {/* ID type radio (pre-selected as Other Documents) */}
+                      <tr>
+                        <td className="reg-er-label-cell">Select ID Type for Identification:<span className="reg-req">*</span></td>
+                        <td className="reg-er-field-cell">
+                          <label style={{ marginRight: '16px', fontSize: '13px' }}>
+                            <input type="radio" name="er_id_type" value="aadhaar"
+                                   checked={idType === 'aadhaar'}
+                                   onChange={() => { setIdType('aadhaar'); setRegError(''); }} />
+                            &nbsp;Aadhaar
+                          </label>
+                          <label style={{ fontSize: '13px' }}>
+                            <input type="radio" name="er_id_type" value="other"
+                                   checked={idType === 'other'}
+                                   onChange={() => { setIdType('other'); setRegError(''); }} />
+                            &nbsp;Other Documents
+                          </label>
+                        </td>
+                      </tr>
+
+                      {/* Select ID Type dropdown */}
+                      <tr>
+                        <td className="reg-er-label-cell">Select ID Type:<span className="reg-req">*</span></td>
+                        <td className="reg-er-field-cell">
+                          <select className="reg-input" style={{ width: '220px' }}
+                                  value={otherDocType}
+                                  onChange={e => { setOtherDocType(e.target.value); setRegError(''); }}>
+                            <option value="">-- Select Type --</option>
+                            <option value="passport">Passport</option>
+                            <option value="voter_id">Voter ID Card</option>
+                            <option value="driving_licence">Driving Licence</option>
+                            <option value="pan">PAN Card</option>
+                            <option value="ration_card">Ration Card</option>
+                            <option value="bank_passbook">Bank Passbook</option>
+                          </select>
+                        </td>
+                      </tr>
+
+                      {/* ID Number */}
+                      <tr>
+                        <td className="reg-er-label-cell">ID Number:<span className="reg-req">*</span></td>
+                        <td className="reg-er-field-cell">
+                          <input className="reg-input" type="text" style={{ width: '220px' }}
+                                 placeholder="Enter document number"
+                                 value={otherDocNo}
+                                 onChange={e => { setOtherDocNo(e.target.value); setRegError(''); }} />
+                        </td>
+                      </tr>
+
+                      {/* ID Document upload */}
+                      <tr>
+                        <td className="reg-er-label-cell" style={{ verticalAlign: 'top', paddingTop: '10px' }}>
+                          ID Document:<span className="reg-req">*</span>
+                        </td>
+                        <td className="reg-er-field-cell">
+                          {/* Hidden real file input */}
+                          <input
+                            type="file"
+                            ref={fileInputRef}
+                            accept=".pdf,.jpg,.jpeg"
+                            style={{ display: 'none' }}
+                            onChange={handleFileChange}
+                          />
+                          <div className="reg-er-file-row">
+                            <button className="reg-er-choose-btn"
+                                    onClick={() => fileInputRef.current?.click()}>
+                              Choose File
+                            </button>
+                            <span className="reg-er-filename">
+                              {docFile ? docFile.name : 'No file chosen'}
+                            </span>
+                            <button className="reg-er-upload-btn"
+                                    onClick={handleFileUpload}
+                                    disabled={!docFile || docUploaded}>
+                              Upload
+                            </button>
+                          </div>
+                          {docUploaded && (
+                            <div className="reg-success-msg" style={{ marginTop: '6px' }}>
+                              File uploaded successfully.
+                            </div>
+                          )}
+                          {docUploadError && (
+                            <div className="reg-error" style={{ marginTop: '6px' }}>
+                              {docUploadError}
+                            </div>
+                          )}
+                        </td>
+                      </tr>
+                    </tbody>
+                  </table>
+
+                  {/* Notes */}
+                  <div className="reg-er-notes">
+                    <strong>Note**</strong><br />
+                    1. Document type allowed pdf, jpg &amp; jpeg.<br />
+                    2. Maximum size of the Document should be 50–100 KB.<br />
+                    3. User must upload any one ID for Identification.
                   </div>
+
+                  {regError && <div className="reg-error" style={{ margin: '8px 0' }}>{regError}</div>}
+
                   <div className="reg-btn-row" style={{ justifyContent: 'center' }}>
-                    <button className="reg-btn-primary" onClick={closeRegisterModal}>Close</button>
+                    <button className="reg-btn-primary" onClick={handleStep6Submit}>Continue</button>
+                    <button className="reg-btn-secondary" onClick={closeRegisterModal}>Cancel</button>
                   </div>
                 </div>
               )}
