@@ -489,3 +489,260 @@ footer { margin-top: 20px; }
   background-color: #218838;
   border-color: #1e7e34;
 }
+
+/* ================================================================
+   REGISTER / ENROLL NEW EMPLOYEE MODAL
+   ================================================================ */
+
+/* ── Outer box ── */
+.reg-modal-box {
+  background-color: #ffffff;
+  border-radius: 6px;
+  width: 520px;
+  max-width: 96vw;
+  max-height: 90vh;
+  overflow-y: auto;
+  box-shadow: 0 8px 32px rgba(0,0,0,0.35);
+  font-family: Arial, Verdana, sans-serif;
+}
+
+/* ── Header bar ── */
+.reg-modal-header {
+  background-color: #003f87;
+  color: #ffffff;
+  font-size: 14px;
+  font-weight: bold;
+  padding: 10px 14px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  border-radius: 6px 6px 0 0;
+}
+.reg-modal-close {
+  background: none;
+  border: none;
+  color: #ffffff;
+  font-size: 16px;
+  cursor: pointer;
+  line-height: 1;
+  padding: 2px 6px;
+}
+.reg-modal-close:hover { color: #ffcccc; }
+
+/* ── Body ── */
+.reg-modal-body {
+  padding: 16px 20px 20px 20px;
+}
+
+/* ── Step indicator dots ── */
+.reg-step-indicator {
+  display: flex;
+  gap: 8px;
+  justify-content: center;
+  margin-bottom: 18px;
+}
+.reg-step-dot {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  font-size: 12px;
+  font-weight: bold;
+  background-color: #e0e0e0;
+  color: #666;
+  border: 2px solid #ccc;
+}
+.reg-step-dot.active {
+  background-color: #003f87;
+  color: #fff;
+  border-color: #003f87;
+}
+.reg-step-dot.done {
+  background-color: #28a745;
+  color: #fff;
+  border-color: #28a745;
+}
+
+/* ── Step content wrapper ── */
+.reg-step-content {
+  font-size: 13px;
+  color: #333;
+}
+
+/* ── Question text ── */
+.reg-question {
+  font-size: 13px;
+  font-weight: bold;
+  color: #003f87;
+  margin-bottom: 14px;
+}
+
+/* ── Note text ── */
+.reg-note {
+  font-size: 12px;
+  color: #555;
+  margin-bottom: 14px;
+  line-height: 1.5;
+}
+
+/* ── Info box (yellow) ── */
+.reg-info-box {
+  background-color: #fffde7;
+  border: 1px solid #ffe082;
+  border-left: 4px solid #f9a825;
+  border-radius: 4px;
+  padding: 10px 12px;
+  font-size: 12px;
+  color: #5d4037;
+  margin-bottom: 14px;
+}
+.reg-info-box strong { display: block; margin-bottom: 4px; }
+.reg-info-box p { margin: 0; }
+
+/* ── Form group ── */
+.reg-form-group {
+  margin-bottom: 14px;
+}
+.reg-label {
+  display: block;
+  font-size: 12px;
+  font-weight: bold;
+  color: #333;
+  margin-bottom: 4px;
+}
+.reg-req { color: #c0392b; }
+.reg-input {
+  width: 100%;
+  padding: 6px 8px;
+  font-size: 13px;
+  border: 1px solid #b0b0b0;
+  border-radius: 3px;
+  font-family: Arial, Verdana, sans-serif;
+  color: #333;
+}
+.reg-input:focus {
+  outline: none;
+  border-color: #003f87;
+  box-shadow: 0 0 0 2px rgba(0,63,135,0.15);
+}
+
+/* ── Input row (input + validate button side-by-side) ── */
+.reg-input-row {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+.reg-input-row .reg-input { flex: 1; }
+
+/* ── Radio group ── */
+.reg-radio-group {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-bottom: 14px;
+}
+.reg-radio-label {
+  font-size: 13px;
+  color: #333;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+}
+
+/* ── Checkbox label ── */
+.reg-checkbox-label {
+  font-size: 12px;
+  color: #333;
+  display: flex;
+  align-items: flex-start;
+  gap: 6px;
+  line-height: 1.5;
+  margin-bottom: 14px;
+  cursor: pointer;
+}
+.reg-checkbox-label input[type="checkbox"] { margin-top: 3px; flex-shrink: 0; }
+
+/* ── Button row ── */
+.reg-btn-row {
+  display: flex;
+  gap: 10px;
+  justify-content: flex-end;
+  margin-top: 18px;
+  padding-top: 12px;
+  border-top: 1px solid #e8e8e8;
+}
+.reg-btn-primary {
+  background-color: #a52a2a;
+  color: #ffffff;
+  border: none;
+  border-radius: 4px;
+  padding: 7px 20px;
+  font-size: 13px;
+  font-family: Arial, Verdana, sans-serif;
+  cursor: pointer;
+  font-weight: bold;
+}
+.reg-btn-primary:hover { background-color: #8b0000; }
+.reg-btn-primary:disabled { opacity: 0.6; cursor: not-allowed; }
+
+.reg-btn-secondary {
+  background-color: #6c757d;
+  color: #ffffff;
+  border: none;
+  border-radius: 4px;
+  padding: 7px 20px;
+  font-size: 13px;
+  font-family: Arial, Verdana, sans-serif;
+  cursor: pointer;
+}
+.reg-btn-secondary:hover { background-color: #545b62; }
+
+.reg-btn-validate {
+  background-color: #003f87;
+  color: #ffffff;
+  border: none;
+  border-radius: 4px;
+  padding: 6px 14px;
+  font-size: 12px;
+  font-family: Arial, Verdana, sans-serif;
+  cursor: pointer;
+  white-space: nowrap;
+  font-weight: bold;
+}
+.reg-btn-validate:hover { background-color: #002d63; }
+.reg-btn-validate:disabled { opacity: 0.6; cursor: not-allowed; }
+
+/* ── Error / success messages ── */
+.reg-error {
+  color: #c0392b;
+  font-size: 12px;
+  background-color: #fdecea;
+  border: 1px solid #f5c6cb;
+  border-radius: 3px;
+  padding: 6px 10px;
+  margin-top: 8px;
+}
+.reg-success-msg {
+  color: #155724;
+  font-size: 12px;
+  background-color: #d4edda;
+  border: 1px solid #c3e6cb;
+  border-radius: 3px;
+  padding: 6px 10px;
+  margin-top: 6px;
+}
+
+/* ── Step 6 success screen ── */
+.reg-success-big {
+  padding: 20px 10px;
+  text-align: center;
+}
+.reg-success-big h5 { font-size: 16px; margin: 0; }
+
+@media (max-width: 576px) {
+  .reg-modal-box { width: 100%; border-radius: 0; }
+  .reg-btn-row   { flex-direction: column-reverse; }
+  .reg-btn-primary, .reg-btn-secondary { width: 100%; text-align: center; }
+}

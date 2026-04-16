@@ -15,6 +15,7 @@ from dotenv import load_dotenv
 
 from database import init_db
 from routers import auth as auth_router
+from routers import employee as employee_router
 
 load_dotenv()
 
@@ -50,7 +51,8 @@ async def on_startup() -> None:
 
 # ── Routes ────────────────────────────────────────────────────────────────────
 
-app.include_router(auth_router.router, prefix="/api")
+app.include_router(auth_router.router,     prefix="/api")
+app.include_router(employee_router.router, prefix="/api")
 
 
 @app.get("/", tags=["System"])

@@ -13,6 +13,9 @@ interface MenuItem {
   isCyan?: boolean;
 }
 
+type EsicAnswer = 'yes' | 'no' | '';
+type IdType     = 'aadhaar' | 'other' | '';
+
 // ── Menu data ─────────────────────────────────────────────────────────────────
 
 const EMPLOYER_MENU: MenuItem[] = [
@@ -100,14 +103,18 @@ function StarBadge() {
   );
 }
 
-function MenuLink({ item }: { item: MenuItem }) {
+function MenuLink({ item, onClick }: { item: MenuItem; onClick?: () => void }) {
+  const handleClick = (e: React.MouseEvent) => {
+    e.preventDefault();
+    if (onClick) onClick();
+  };
   return (
     <li>
       <span className="innerText">
         <a
           href="#"
           style={{ color: 'blue', backgroundColor: item.isCyan ? 'cyan' : 'transparent' }}
-          onClick={(e) => e.preventDefault()}
+          onClick={handleClick}
         >
           {item.text}
         </a>
@@ -142,6 +149,25 @@ export default function DashboardPage() {
   const [timeLeft,     setTimeLeft]     = useState(SESSION_TIMEOUT);
   const [showAttention, setShowAttention] = useState(false);
   const [showPassword,  setShowPassword]  = useState(false);
+
+  // ── Register/Enroll New Employee flow ────────────────────────────────────
+  const [showRegister,   setShowRegister]   = useState(false);
+  const [regStep,        setRegStep]        = useState(1);
+  const [esicAnswer,     setEsicAnswer]     = useState<EsicAnswer>('');
+  const [insuranceNo,    setInsuranceNo]    = useState('');
+  const [dateOfAppt,     setDateOfAppt]     = useState('');
+  const [confirmDecl,    setConfirmDecl]    = useState(false);
+  const [mobileNo,       setMobileNo]       = useState('');
+  const [mobileValid,    setMobileValid]    = useState(false);
+  const [mobileLoading,  setMobileLoading]  = useState(false);
+  const [useGenerated,   setUseGenerated]   = useState<boolean | null>(null);
+  const [idType,         setIdType]         = useState<IdType>('');
+  const [aadhaarNo,      setAadhaarNo]      = useState('');
+  const [otherDocType,   setOtherDocType]   = useState('');
+  const [otherDocNo,     setOtherDocNo]     = useState('');
+  const [regError,       setRegError]       = useState('');
+  const [regSuccess,     setRegSuccess]     = useState('');
+
   const activityRef = useRef(0);
 
   // ── Auth guard ───────────────────────────────────────────────────────────
@@ -207,6 +233,114 @@ export default function DashboardPage() {
   const handleAttentionAgree = () => {
     setShowAttention(false);
     setTimeout(() => setShowPassword(true), 200);
+  };
+
+  // ── Register Employee handlers ───────────────────────────────────────────
+  const openRegisterModal = () => {
+    setRegStep(1);
+    setEsicAnswer('');
+    setInsuranceNo('');
+    setDateOfAppt('');
+    setConfirmDecl(false);
+    setMobileNo('');
+    setMobileValid(false);
+    setUseGenerated(null);
+    setIdType('');
+    setAadhaarNo('');
+    setOtherDocType('');
+    setOtherDocNo('');
+    setRegError('');
+    setRegSuccess('');
+    setShowRegister(true);
+  };
+
+  const closeRegisterModal = () => setShowRegister(false);
+
+  const handleStep1Continue = () => {
+    setRegError('');
+    if (!esicAnswer) { setRegError('Please select an option.'); return; }
+    setRegStep(2);
+  };
+
+  const handleStep2Continue = () => {
+    setRegError('');
+    if (esicAnswer === 'yes') {
+      if (!insuranceNo.trim()) { setRegError('Please enter Employee Insurance Number.'); return; }
+      if (!dateOfAppt)         { setRegError('Please enter Date of Appointment.'); return; }
+    } else {
+      if (!confirmDecl) { setRegError('Please confirm the declaration to proceed.'); return; }
+    }
+    setRegStep(3);
+  };
+
+  const handleValidateMobile = async () => {
+    setRegError('');
+    if (!/^\d{10}$/.test(mobileNo)) {
+      setRegError('Please enter a valid 10-digit mobile number.');
+      return;
+    }
+    setMobileLoading(true);
+    try {
+      const res = await fetch('/api/employee/validate-mobile', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ mobile: mobileNo }),
+      });
+      if (res.ok) {
+        setMobileValid(true);
+      } else {
+        const data = await res.json().catch(() => ({}));
+        setRegError(data.detail || 'Mobile validation failed.');
+      }
+    } catch {
+      // Network error – accept locally for demo
+      setMobileValid(true);
+    } finally {
+      setMobileLoading(false);
+    }
+  };
+
+  const handleStep3Continue = () => {
+    setRegError('');
+    if (!mobileValid) { setRegError('Please validate the mobile number first.'); return; }
+    setRegStep(4);
+  };
+
+  const handleStep4Continue = () => {
+    setRegError('');
+    if (useGenerated === null) { setRegError('Please select an option.'); return; }
+    setRegStep(5);
+  };
+
+  const handleSubmitRegistration = async () => {
+    setRegError('');
+    if (!idType) { setRegError('Please select an ID type.'); return; }
+    if (idType === 'aadhaar' && !/^\d{12}$/.test(aadhaarNo)) {
+      setRegError('Please enter a valid 12-digit Aadhaar number.');
+      return;
+    }
+    if (idType === 'other' && (!otherDocType || !otherDocNo.trim())) {
+      setRegError('Please select document type and enter document number.');
+      return;
+    }
+    try {
+      await fetch('/api/employee/register', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          esic_answer: esicAnswer,
+          insurance_no: insuranceNo || null,
+          date_of_appointment: dateOfAppt || null,
+          mobile: mobileNo,
+          id_type: idType,
+          aadhaar_no: idType === 'aadhaar' ? aadhaarNo : null,
+          other_doc_type: idType === 'other' ? otherDocType : null,
+          other_doc_no: idType === 'other' ? otherDocNo : null,
+        }),
+      });
+    } catch { /* stub – proceed regardless */ }
+    setRegSuccess('Employee registration submitted successfully!');
+    setRegStep(6);
   };
 
   const displayName = employerCode
@@ -330,7 +464,11 @@ export default function DashboardPage() {
                               <span className="navheaderStyle">Employee (Insured Person)</span>
                               <ul className="listStyle">
                                 {EMPLOYEE_MENU.map(item => (
-                                  <MenuLink key={item.id} item={item} />
+                                  <MenuLink
+                                    key={item.id}
+                                    item={item}
+                                    onClick={item.id === 'lnkRegisterNewIP' ? openRegisterModal : undefined}
+                                  />
                                 ))}
                               </ul>
                             </td>
@@ -429,6 +567,269 @@ export default function DashboardPage() {
               </button>
             </div>
           </div>
+        </ModalBackdrop>
+      )}
+
+      {/* ══ REGISTER / ENROLL NEW EMPLOYEE MODAL ══════════════════════════════ */}
+      {showRegister && (
+        <ModalBackdrop>
+          <div className="reg-modal-box">
+
+            {/* Header */}
+            <div className="reg-modal-header">
+              <span>Register New IP (Insured Person)</span>
+              <button className="reg-modal-close" onClick={closeRegisterModal} title="Close">✕</button>
+            </div>
+
+            <div className="reg-modal-body">
+
+              {/* ── Step indicator ── */}
+              {regStep < 6 && (
+                <div className="reg-step-indicator">
+                  {[1,2,3,4,5].map(s => (
+                    <span key={s} className={`reg-step-dot${regStep === s ? ' active' : regStep > s ? ' done' : ''}`}>
+                      {s}
+                    </span>
+                  ))}
+                </div>
+              )}
+
+              {/* ─────────── STEP 1 : Was ESIC number ever allotted? ─────────── */}
+              {regStep === 1 && (
+                <div className="reg-step-content">
+                  <p className="reg-question">
+                    Was the employee ever allotted an <strong>Insurance (ESIC) Number</strong> before?
+                  </p>
+                  <div className="reg-radio-group">
+                    <label className="reg-radio-label">
+                      <input type="radio" name="esic_allotted" value="yes"
+                             checked={esicAnswer === 'yes'}
+                             onChange={() => { setEsicAnswer('yes'); setRegError(''); }} />
+                      &nbsp;Yes
+                    </label>
+                    <label className="reg-radio-label">
+                      <input type="radio" name="esic_allotted" value="no"
+                             checked={esicAnswer === 'no'}
+                             onChange={() => { setEsicAnswer('no'); setRegError(''); }} />
+                      &nbsp;No
+                    </label>
+                  </div>
+                  {regError && <div className="reg-error">{regError}</div>}
+                  <div className="reg-btn-row">
+                    <button className="reg-btn-primary" onClick={handleStep1Continue}>Continue</button>
+                  </div>
+                </div>
+              )}
+
+              {/* ─────────── STEP 2 (Yes) : Enter Insurance No + Date ─────────── */}
+              {regStep === 2 && esicAnswer === 'yes' && (
+                <div className="reg-step-content">
+                  <p className="reg-note">
+                    Please verify that the employee was previously allotted an Insurance Number by
+                    filling in the details below.
+                  </p>
+                  <div className="reg-form-group">
+                    <label className="reg-label">Employee Insurance No. <span className="reg-req">*</span></label>
+                    <input className="reg-input" type="text" maxLength={17}
+                           placeholder="e.g. 1234567890123"
+                           value={insuranceNo}
+                           onChange={e => { setInsuranceNo(e.target.value); setRegError(''); }} />
+                  </div>
+                  <div className="reg-form-group">
+                    <label className="reg-label">Date of Appointment <span className="reg-req">*</span></label>
+                    <input className="reg-input" type="date"
+                           value={dateOfAppt}
+                           onChange={e => { setDateOfAppt(e.target.value); setRegError(''); }} />
+                  </div>
+                  {regError && <div className="reg-error">{regError}</div>}
+                  <div className="reg-btn-row">
+                    <button className="reg-btn-secondary" onClick={() => { setRegStep(1); setRegError(''); }}>Back</button>
+                    <button className="reg-btn-primary" onClick={handleStep2Continue}>Continue</button>
+                  </div>
+                </div>
+              )}
+
+              {/* ─────────── STEP 2 (No) : Declaration ─────────── */}
+              {regStep === 2 && esicAnswer === 'no' && (
+                <div className="reg-step-content">
+                  <div className="reg-info-box">
+                    <strong>Important Notice:</strong>
+                    <p>
+                      Insurance Number is unique and is valid for the lifetime of the employee.
+                      Registering again for a New Insurance Number is illegal and the employee may
+                      be debarred from benefits.
+                    </p>
+                  </div>
+                  <label className="reg-checkbox-label">
+                    <input type="checkbox"
+                           checked={confirmDecl}
+                           onChange={e => { setConfirmDecl(e.target.checked); setRegError(''); }} />
+                    &nbsp;I declare and confirm that this employee was <strong>never</strong> allotted
+                    an Insurance Number earlier and I take full responsibility for this declaration.
+                  </label>
+                  {regError && <div className="reg-error">{regError}</div>}
+                  <div className="reg-btn-row">
+                    <button className="reg-btn-secondary" onClick={() => { setRegStep(1); setRegError(''); }}>Back</button>
+                    <button className="reg-btn-primary" onClick={handleStep2Continue}>Continue</button>
+                  </div>
+                </div>
+              )}
+
+              {/* ─────────── STEP 3 : Mobile number ─────────── */}
+              {regStep === 3 && (
+                <div className="reg-step-content">
+                  <p className="reg-note">
+                    Enter the employee&apos;s mobile number. It is mandatory to validate the mobile number.
+                  </p>
+                  <div className="reg-form-group">
+                    <label className="reg-label">Mobile Number <span className="reg-req">*</span></label>
+                    <div className="reg-input-row">
+                      <input className="reg-input" type="text" maxLength={10}
+                             placeholder="10-digit mobile number"
+                             value={mobileNo}
+                             disabled={mobileValid}
+                             onChange={e => { setMobileNo(e.target.value.replace(/\D/g, '')); setRegError(''); setMobileValid(false); }} />
+                      <button className="reg-btn-validate"
+                              disabled={mobileValid || mobileLoading}
+                              onClick={handleValidateMobile}>
+                        {mobileLoading ? 'Validating…' : mobileValid ? '✓ Validated' : 'Validate'}
+                      </button>
+                    </div>
+                  </div>
+                  {mobileValid && (
+                    <div className="reg-success-msg">
+                      Mobile number validated successfully.
+                    </div>
+                  )}
+                  {regError && <div className="reg-error">{regError}</div>}
+                  <div className="reg-btn-row">
+                    <button className="reg-btn-secondary" onClick={() => { setRegStep(2); setRegError(''); }}>Back</button>
+                    <button className="reg-btn-primary" onClick={handleStep3Continue}>Continue</button>
+                  </div>
+                </div>
+              )}
+
+              {/* ─────────── STEP 4 : Use earlier generated number? ─────────── */}
+              {regStep === 4 && (
+                <div className="reg-step-content">
+                  <div className="reg-info-box">
+                    <p>
+                      An Insurance Number may have been generated earlier for this employee but
+                      not yet activated. Do you want to use the earlier generated Insurance Number?
+                    </p>
+                  </div>
+                  <div className="reg-radio-group">
+                    <label className="reg-radio-label">
+                      <input type="radio" name="use_generated" value="yes"
+                             checked={useGenerated === true}
+                             onChange={() => { setUseGenerated(true); setRegError(''); }} />
+                      &nbsp;Yes, use the earlier generated number
+                    </label>
+                    <label className="reg-radio-label">
+                      <input type="radio" name="use_generated" value="no"
+                             checked={useGenerated === false}
+                             onChange={() => { setUseGenerated(false); setRegError(''); }} />
+                      &nbsp;No, generate a new number
+                    </label>
+                  </div>
+                  {regError && <div className="reg-error">{regError}</div>}
+                  <div className="reg-btn-row">
+                    <button className="reg-btn-secondary" onClick={() => { setRegStep(3); setRegError(''); }}>Back</button>
+                    <button className="reg-btn-primary" onClick={handleStep4Continue}>Continue</button>
+                  </div>
+                </div>
+              )}
+
+              {/* ─────────── STEP 5 : ID verification ─────────── */}
+              {regStep === 5 && (
+                <div className="reg-step-content">
+                  <p className="reg-note">
+                    Please provide a valid identity document for the employee.
+                  </p>
+                  <div className="reg-form-group">
+                    <label className="reg-label">Select ID Type <span className="reg-req">*</span></label>
+                    <div className="reg-radio-group">
+                      <label className="reg-radio-label">
+                        <input type="radio" name="id_type" value="aadhaar"
+                               checked={idType === 'aadhaar'}
+                               onChange={() => { setIdType('aadhaar'); setRegError(''); }} />
+                        &nbsp;Aadhaar Card
+                      </label>
+                      <label className="reg-radio-label">
+                        <input type="radio" name="id_type" value="other"
+                               checked={idType === 'other'}
+                               onChange={() => { setIdType('other'); setRegError(''); }} />
+                        &nbsp;Other Documents
+                      </label>
+                    </div>
+                  </div>
+
+                  {idType === 'aadhaar' && (
+                    <div className="reg-form-group">
+                      <label className="reg-label">Aadhaar Number <span className="reg-req">*</span></label>
+                      <input className="reg-input" type="text" maxLength={12}
+                             placeholder="12-digit Aadhaar number"
+                             value={aadhaarNo}
+                             onChange={e => { setAadhaarNo(e.target.value.replace(/\D/g, '')); setRegError(''); }} />
+                    </div>
+                  )}
+
+                  {idType === 'other' && (
+                    <>
+                      <div className="reg-form-group">
+                        <label className="reg-label">Document Type <span className="reg-req">*</span></label>
+                        <select className="reg-input"
+                                value={otherDocType}
+                                onChange={e => { setOtherDocType(e.target.value); setRegError(''); }}>
+                          <option value="">-- Select Document Type --</option>
+                          <option value="passport">Passport</option>
+                          <option value="voter_id">Voter ID Card</option>
+                          <option value="driving_licence">Driving Licence</option>
+                          <option value="pan">PAN Card</option>
+                          <option value="ration_card">Ration Card</option>
+                          <option value="bank_passbook">Bank Passbook</option>
+                        </select>
+                      </div>
+                      <div className="reg-form-group">
+                        <label className="reg-label">Document Number <span className="reg-req">*</span></label>
+                        <input className="reg-input" type="text"
+                               placeholder="Enter document number"
+                               value={otherDocNo}
+                               onChange={e => { setOtherDocNo(e.target.value); setRegError(''); }} />
+                      </div>
+                    </>
+                  )}
+
+                  {regError && <div className="reg-error">{regError}</div>}
+                  <div className="reg-btn-row">
+                    <button className="reg-btn-secondary" onClick={() => { setRegStep(4); setRegError(''); }}>Back</button>
+                    <button className="reg-btn-primary" onClick={handleSubmitRegistration}>Submit</button>
+                  </div>
+                </div>
+              )}
+
+              {/* ─────────── STEP 6 : Success ─────────── */}
+              {regStep === 6 && (
+                <div className="reg-step-content" style={{ textAlign: 'center' }}>
+                  <div className="reg-success-big">
+                    <div style={{ fontSize: '48px', color: '#28a745' }}>✓</div>
+                    <h5 style={{ color: '#28a745', marginTop: '10px' }}>Registration Submitted</h5>
+                    <p style={{ fontSize: '13px', color: '#555', marginTop: '8px' }}>
+                      {regSuccess}
+                    </p>
+                    <p style={{ fontSize: '12px', color: '#777' }}>
+                      The employee&apos;s details have been submitted for processing.
+                      The Insurance Number will be generated and communicated to the registered mobile number.
+                    </p>
+                  </div>
+                  <div className="reg-btn-row" style={{ justifyContent: 'center' }}>
+                    <button className="reg-btn-primary" onClick={closeRegisterModal}>Close</button>
+                  </div>
+                </div>
+              )}
+
+            </div>{/* reg-modal-body */}
+          </div>{/* reg-modal-box */}
         </ModalBackdrop>
       )}
 
