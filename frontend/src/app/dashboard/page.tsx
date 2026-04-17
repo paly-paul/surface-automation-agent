@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
+import EmployeeRegistrationModal from './EmployeeRegistrationModal';
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
@@ -399,7 +400,7 @@ export default function DashboardPage() {
         }),
       });
     } catch { /* stub */ }
-    closeRegisterModal();
+    setRegStep(7);
   };
 
   const displayName = employerCode
@@ -630,7 +631,7 @@ export default function DashboardPage() {
       )}
 
       {/* ══ REGISTER / ENROLL NEW EMPLOYEE MODAL ══════════════════════════════ */}
-      {showRegister && (
+      {showRegister && regStep <= 6 && (
         <ModalBackdrop>
           <div className={`reg-modal-box${regStep === 6 ? ' reg-modal-box--wide' : ''}`}>
 
@@ -973,6 +974,21 @@ export default function DashboardPage() {
 
             </div>{/* reg-modal-body */}
           </div>{/* reg-modal-box */}
+        </ModalBackdrop>
+      )}
+
+      {/* ══ EMPLOYEE REGISTRATION FORM MODAL (Step 7) ═══════════════════════════ */}
+      {showRegister && regStep === 7 && (
+        <ModalBackdrop>
+          <EmployeeRegistrationModal
+            employerCode={employerCode}
+            mobileNo={mobileNo}
+            idType={idType}
+            otherDocType={otherDocType}
+            otherDocNo={otherDocNo}
+            aadhaarNo={aadhaarNo}
+            onClose={closeRegisterModal}
+          />
         </ModalBackdrop>
       )}
 
